@@ -1,0 +1,249 @@
+---
+# Source: test-deployments/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devteam1  # Dynamically name namespaces
+spec: {}
+status: {}
+---
+# Source: test-deployments/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devteam2  # Dynamically name namespaces
+spec: {}
+status: {}
+---
+# Source: test-deployments/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: devteam3  # Dynamically name namespaces
+spec: {}
+status: {}
+---
+# Source: test-deployments/templates/deployment-default.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: default1
+  name: default1
+  namespace: devteam1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: default1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: default1
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 100m
+status: {}
+---
+# Source: test-deployments/templates/deployment-default.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: default2
+  name: default2
+  namespace: devteam2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: default2
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: default2
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 100m
+status: {}
+---
+# Source: test-deployments/templates/deployment-default.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: default3
+  name: default3
+  namespace: devteam3
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: default3
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: default3
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 100m
+status: {}
+---
+# Source: test-deployments/templates/deployment-spot.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: spot1
+  name: spot1
+  namespace: devteam1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spot1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: spot1
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 100m
+      nodeSelector:
+        node-type: spot
+      tolerations:
+        - key: "node-type"
+          value: "spot"
+          effect: "NoSchedule"
+        - key: "node-type"
+          value: "spot"
+          effect: "PreferNoSchedule"
+status: {}
+---
+# Source: test-deployments/templates/deployment-spot.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: spot2
+  name: spot2
+  namespace: devteam2
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spot2
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: spot2
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 100m
+      nodeSelector:
+        node-type: spot
+      tolerations:
+        - key: "node-type"
+          value: "spot"
+          effect: "NoSchedule"
+        - key: "node-type"
+          value: "spot"
+          effect: "PreferNoSchedule"
+status: {}
+---
+# Source: test-deployments/templates/deployment-spot.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: spot3
+  name: spot3
+  namespace: devteam3
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: spot3
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: spot3
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 100m
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 100m
+      nodeSelector:
+        node-type: spot
+      tolerations:
+        - key: "node-type"
+          value: "spot"
+          effect: "NoSchedule"
+        - key: "node-type"
+          value: "spot"
+          effect: "PreferNoSchedule"
+status: {}

@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61",'pip>=21.2.4', "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sweeper"
+version = "1.0.0"
+dynamic = ["dependencies"]
+
+[project.scripts]
+sweeper = "src.cli:cli"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}

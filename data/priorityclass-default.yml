@@ -1,0 +1,8 @@
+apiVersion: scheduling.k8s.io/v1
+description: Default priority class for pods without an explicit priority class.
+kind: PriorityClass
+metadata:
+  creationTimestamp: null
+  name: default-priority
+preemptionPolicy: PreemptLowerPriority
+value: 0

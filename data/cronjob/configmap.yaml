@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: sweeper
+  namespace: kube-system
+data:
+  GOOGLE_PROJECT: GCP_PROJECT
+  CLUSTER_NAME: cluster-000
+  REGION: us-east4

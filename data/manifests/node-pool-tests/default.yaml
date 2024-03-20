@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: default
+  name: default
+  namespace: node-pool-tests
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: default
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: default
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 2
+status: {}

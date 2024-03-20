@@ -1,0 +1,29 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: sweeper-test-cluster
+nodes:
+- role: control-plane
+  image: kindest/node:v1.26.14@sha256:5d548739ddef37b9318c70cb977f57bf3e5015e4552be4e27e57280a8cbb8e4f
+# DEFAULT NODES
+- role: worker
+  image: kindest/node:v1.26.14@sha256:5d548739ddef37b9318c70cb977f57bf3e5015e4552be4e27e57280a8cbb8e4f
+  labels:
+    cloud.google.com/gke-nodepool: default
+- role: worker
+  image: kindest/node:v1.26.14@sha256:5d548739ddef37b9318c70cb977f57bf3e5015e4552be4e27e57280a8cbb8e4f
+  labels:
+    cloud.google.com/gke-nodepool: default
+# SPOT
+- role: worker
+  image: kindest/node:v1.26.14@sha256:5d548739ddef37b9318c70cb977f57bf3e5015e4552be4e27e57280a8cbb8e4f
+  labels:
+    cloud.google.com/gke-nodepool: spot
+    node-type: spot
+- role: worker
+  image: kindest/node:v1.26.14@sha256:5d548739ddef37b9318c70cb977f57bf3e5015e4552be4e27e57280a8cbb8e4f
+  labels:
+    cloud.google.com/gke-nodepool: spot
+    node-type: spot
+
+
+# k taint no kind-worker node-type=spot:NoSchedule

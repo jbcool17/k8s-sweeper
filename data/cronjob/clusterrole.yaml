@@ -1,0 +1,59 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: sweeper
+rules:
+# Needed to evict and delete pods
+- apiGroups:
+  - ""
+  resources:
+  - "pods"
+  verbs:
+  - "get"
+  - "list"
+  - "delete"
+- apiGroups:
+  - ""
+  resources:
+  - "pods/eviction"
+  verbs:
+  - "create"
+  - "get"
+  - "list"
+  - "delete"
+# Needed to list, cordon, and delete Nodes
+- apiGroups:
+  - ""
+  resources:
+  - "nodes"
+  verbs:
+  - "get"
+  - "list"
+  - "patch"
+  - "delete"
+- apiGroups:
+  - "apps"
+  resources:
+  - "statefulsets"
+  - "deployments"
+  verbs:
+  - "get"
+  - "list"
+# Needed to determine Pod owners
+- apiGroups:
+  - "extensions"
+  resources:
+  - "daemonsets"
+  - "replicasets"
+  verbs:
+  - "get"
+  - "list"
+# Event Creation
+- apiGroups:
+  - "events.k8s.io"
+  resources:
+  - events
+  verbs:
+  - create
+  - update

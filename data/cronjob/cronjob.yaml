@@ -1,0 +1,51 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  creationTimestamp: null
+  name: sweeper
+  namespace: kube-system
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      name: sweeper
+    spec:
+      # activeDeadlineSeconds: 300
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - weight: 1
+                preference:
+                  matchExpressions:
+                  - key: node-type
+                    operator: In
+                    values:
+                    - default
+          serviceAccountName: sweeper
+          containers:
+          - image: IMAGE_NAME
+            name: sweeper
+            imagePullPolicy: Always
+            securityContext:
+              readOnlyRootFilesystem: true
+            args:
+              - sweeper
+              # - --source-node-pool
+              # - pool-000
+              # - --node-batch-size
+              # - "1"
+              # - --dry-run
+            resources: {}
+            envFrom:
+            - configMapRef:
+                name: sweeper
+          restartPolicy: Never
+  schedule: '*/60 * * * *'
+status: {}

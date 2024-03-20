@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: spot-nodeaffinity
+  name: spot-nodeaffinity
+  namespace: node-pool-tests
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spot-nodeaffinity
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: spot-nodeaffinity
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources:
+          requests:
+            cpu: 1
+            memory: 2Gi
+          limits:
+            memory: 2Gi
+            cpu: 2
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 50
+            preference:
+              matchExpressions:
+              - key: "node-type"
+                operator: In
+                values:
+                - spot
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: "node-type"
+                operator: In
+                values:
+                - default
+      tolerations:
+        - key: "node-type"
+          value: "spot"
+          effect: "NoSchedule"
+status: {}
