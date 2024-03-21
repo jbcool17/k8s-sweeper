@@ -1,0 +1,42 @@
+name: Release Draft
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches:
+  #     - master
+  #   tags:
+  #   - 'v*'
+  #   paths:
+  #   - src/**
+  #   - setup.py
+  #   - requirements.txt
+
+
+
+jobs:
+  release:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4.1.1
+
+      - name: Get application version
+        run: echo "version=$(python3 setup.py --version)" >> $GITHUB_ENV
+
+      - name: Short Sha
+        run: echo "shortsha=$(git rev-parse --short=7 ${{ github.sha }})" >> $GITHUB_ENV
+
+      - name: GH Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ env.version }}-${{ env.shortsha }}"
+          name: "Release ${{ env.version }}-${{ env.shortsha }}"
+          body: |
+            Automatically generated release for commit ${{ github.sha }}
+            image-path-placeholder:${{ env.version }}-${{ env.shortsha }}
+
+            Add any changes and updates before officially releasing
+          draft: true
+          prerelease: false

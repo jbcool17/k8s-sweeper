@@ -18,7 +18,7 @@ def package_files(directory):
 
 setup(
     name="sweeper",
-    version="1.0.0-beta",
+    version="0.1.0-beta",
     packages=find_packages(),
     data_files=[("", package_files("src/data"))],
     include_package_data=True,
