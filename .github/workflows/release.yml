@@ -29,7 +29,7 @@ jobs:
       - name: GH Release
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT }}
         with:
           tag_name: "${{ env.version }}-${{ env.shortsha }}"
           name: "Release ${{ env.version }}-${{ env.shortsha }}"
