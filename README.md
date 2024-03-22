@@ -2,7 +2,7 @@
 
 A maintenance tool for kubernetes that drains nodes and evicts pods in a controlled and graceful manner. It targets nodes with a specific label and starts to process them.
 
-A cluster-autoscaler feature is required to be enabled to allow the proper downscaling while any kind of scaling up is disabled in the specified node pool or group. After pods are evicted they should migrate to any other availble nodes where auto scaling is enabled.
+A cluster-autoscaler feature is required to allow for proper downscaling while any kind of scaling up is disabled in the specified node pool or group. After pods are evicted they should migrate to any other availble nodes where auto scaling is enabled.
 
 - [Spot nodes with on-demand fallback](https://cloud.google.com/blog/topics/developers-practitioners/running-gke-application-spot-nodes-demand-nodes-fallback)
 - [GKE Cluster Autoscaler Operating Criteria](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler#operating_criteria)
