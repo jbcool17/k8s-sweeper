@@ -4,13 +4,15 @@ A maintenance tool for kubernetes that drains nodes and evicts pods in a control
 
 A cluster-autoscaler feature is required to be enabled to allow the proper downscaling while any kind of scaling up is disabled in the specified node pool or group. After pods are evicted they should migrate to any other availble nodes where auto scaling is enabled.
 
-<https://cloud.google.com/blog/topics/developers-practitioners/running-gke-application-spot-nodes-demand-nodes-fallback>
+- [Spot nodes with on-demand fallback](https://cloud.google.com/blog/topics/developers-practitioners/running-gke-application-spot-nodes-demand-nodes-fallback)
+- [GKE Cluster Autoscaler Operating Criteria](https://cloud.google.com/kubernetes-engine/docs/concepts/cluster-autoscaler#operating_criteria)
+- [Cluster-Autoscaler](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler)
 
 ## Usecases
 
 1. Downscale nodes with a specific label.
 
-2. If you are using a opt-in type of pattern that utilizes taints/toleration to manage nodes/pods in kubernetes. For example, spot nodes with on-demand nodes as fallback. You can utilize a tool like this to sweep or migrate pods back to the spot when needed via a nightly cron.
+2. If you are using a opt-in type of pattern that utilizes taints/toleration to manage nodes/pods in kubernetes. For example, spot nodes with on-demand nodes as fallback. You can utilize a tool like this to sweep or migrate pods back to the spot when needed via a nightly cron. Something like this works great if the cluster-autoscaler is setup to `"consider the relative cost of the instance types in the various pools..."`, mentioned in the docs links above.
 
 3. Migration workloads from one pool to another during upgrades or patching
 
