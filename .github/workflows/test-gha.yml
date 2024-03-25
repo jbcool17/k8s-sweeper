@@ -3,10 +3,8 @@ name: test gha
 on:
   workflow_dispatch:
 
-
-
 jobs:
-  release:
+  test-gha:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4.1.1
@@ -17,5 +15,5 @@ jobs:
       - name: Short Sha
         run: echo "shortsha=$(git rev-parse --short=7 ${{ github.sha }})" >> $GITHUB_ENV
 
-      - name: GH Release
+      - name: run cmds
         run: pwd && ls -lah
