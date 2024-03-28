@@ -1,6 +1,6 @@
 import signal
 
-from src.sweeper.logging import logging
+from sweeper.logging import logging
 
 
 class GracefulKiller:

@@ -1,9 +1,9 @@
 import importlib.metadata as importlib_metadata
 
 import click
-from src.sweeper import auto_sweeper
-from src.sweeper.logging import logging
-from src.sweeper.sweeper import Sweeper
+from sweeper import auto_sweeper
+from sweeper.logging import logging
+from sweeper.sweeper import Sweeper
 
 
 # -----------------------------------------------------------------------------------------------
