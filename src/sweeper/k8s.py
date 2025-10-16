@@ -87,7 +87,9 @@ def check_for_new_nodes_by_node_pool(node_pool_label):
     return False
 
 
-def check_for_zero_nodes_by_node_pool(node_pool_label, timeout_count=10):
+def check_for_zero_nodes_by_node_pool(
+    node_pool_label, timeout_count=10, node_limit=None, timeout_seconds=20
+) -> bool:
     """
     Waiting for nodes with a certain label to be removed
     """
@@ -96,13 +98,16 @@ def check_for_zero_nodes_by_node_pool(node_pool_label, timeout_count=10):
     while check_count < timeout_count:
         logging.info(f"Checking({check_count + 1}/{timeout_count}) for removed nodes({node_pool_label})...")
         node_count = len(get_nodes_by_label(node_pool_label))
-        logging.info(f"Nodes for Removal: {node_count}")
+        if node_limit is not None:
+            logging.info(f"Nodes for Removal: {node_count} (max_node_limit: {node_limit})")
+        else:
+            logging.info(f"Nodes for Removal: {node_count}")
         check_count += 1
 
         if node_count == 0:
             logging.info("Zero nodes check complete")
             return True
-        time_it(20)
+        time_it(timeout_seconds)
 
     return False
 
@@ -181,10 +186,17 @@ def toggle_node_scheduling(node, cordoned=True, dry_run=False) -> None:
     Toggle node scheduling
 
     Cordon / Uncordon a node
-
     """
     load_config()
     v1 = client.CoreV1Api()
+
+    # Check for taints that indicate node is marked for deletion
+    if not cordoned:
+        node_taints = node.spec.taints or []
+        deletion_taints = ["ToBeDeletedByClusterAutoscaler", "DeletionCandidateOfClusterAutoscaler"]
+        if any(taint.key in deletion_taints for taint in node_taints):
+            logging.info(f"Node {node.metadata.name} is marked for deletion, skipping uncordon")
+            return
 
     if dry_run:
         logging.info(f"DRY-RUN: Would cordon:{cordoned} - {node.metadata.name}")

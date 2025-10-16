@@ -47,14 +47,14 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: node-type
+              - key: jbcool.io/type
                 operator: In
                 values:
                 - spot
       # A taints was added to an automatically created Node.
       # You can remove taints of Node or add this tolerations.
       tolerations:
-      - key: "node-type"
+      - key: "jbcool.io/type"
         value: "spot"
         effect: "NoSchedule"
       containers:

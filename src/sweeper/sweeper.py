@@ -6,6 +6,8 @@ from .event import Event
 from .logging import logging
 from .utils import create_batches, time_it
 
+DRY_RUN_TIME = 1
+
 
 class Sweeper:
     """
@@ -15,7 +17,7 @@ class Sweeper:
 
     def __init__(
         self,
-        source_node_pool_label: str = "cloud.google.com/gke-nodepool=default",
+        source_node_pool_label: list[str] = ["cloud.google.com/gke-nodepool=default"],
         # How many nodes per batch
         node_batch_size: int = 10,
         # How much time in between node batches
@@ -35,6 +37,11 @@ class Sweeper:
         processed: bool = False,
         # Add note about the sweep
         note: str = "",
+        # Max node limit
+        max_node_limit: int = None,
+        # Timeout settings for zero node check
+        zero_nodes_timeout_count: int = 10,
+        zero_nodes_timeout_seconds: int = 20,
     ):
         # NODE POOL
         self.source_node_pool_label = source_node_pool_label
@@ -51,6 +58,13 @@ class Sweeper:
         self.disable_node_removal_wait = disable_node_removal_wait
         self.processed = processed
         self.note = note
+        self.max_node_limit = max_node_limit
+        self.zero_nodes_timeout_count = zero_nodes_timeout_count
+        self.zero_nodes_timeout_seconds = zero_nodes_timeout_seconds
+
+        if self.dry_run:
+            self.node_batch_time = DRY_RUN_TIME
+            self.pod_batch_time = DRY_RUN_TIME
 
     def sweep(self):
         """
@@ -63,14 +77,33 @@ class Sweeper:
         - Wait for nodes to scale down in source pool, uncordon if it times out
         """
 
+        if not self.source_node_pool_label:
+            logging.error("No source node pool labels provided. Exiting.")
+            sys.exit(1)
+
         # SETUP - Variables
         start = time.time()
-        source_nodes = k8s.get_nodes_by_label(self.source_node_pool_label)
-        source_node_count = len(source_nodes)
+
+        # SETUP - Get all nodes that have all source labels
+        label_selector = ",".join(self.source_node_pool_label)
+        source_nodes = k8s.get_nodes_by_label(label_selector)
+        initial_node_count = len(source_nodes)
+
+        # Join labels for logging
+        labels_str = ", ".join(self.source_node_pool_label)
 
         # Start Logging
-        logging.info(f"Source: {self.source_node_pool_label} {source_node_count}")
-        logging.info(f"Attemping to sweep the pods Johnny!! {self.source_node_pool_label}")
+        logging.info(f"Source: {labels_str} {initial_node_count}")
+        logging.info(f"Attemping to sweep the pods Johnny!! {labels_str}")
+
+        # Limit nodes if max_node_limit is set
+        if self.max_node_limit is not None:
+            source_nodes = source_nodes[: self.max_node_limit]
+            logging.info(
+                f"Max node limit set to {self.max_node_limit}. Processing {len(source_nodes)} of {initial_node_count} nodes."
+            )
+
+        source_node_count = len(source_nodes)
         logging.info(f"We're gonna need {source_node_count} body bag(s)!!!")
         sweeper_event = Event(dry_run=self.dry_run)
 
@@ -79,9 +112,9 @@ class Sweeper:
 
             # TRIGGER KUBERNETS EVENT
             sweeper_event.create(
-                note=f"Initiate sweeper start on node pool: {self.source_node_pool_label}",
+                note=f"Initiate sweeper start on node pool(s): {labels_str}",
                 action="SweeperInitiated",
-                regarding={"kind": "Sweeper", "name": f"sweeper-{self.source_node_pool_label}"},
+                regarding={"kind": "Sweeper", "name": f"sweeper-{labels_str}"},
             )
 
             # ------------------------------------------------------------------
@@ -100,9 +133,9 @@ class Sweeper:
 
                 # TRIGGER KUBERNETS EVENT
                 sweeper_event.create(
-                    note=f"{self.source_node_pool_label} - Processing node batch {i + 1} of {node_batch_data['total_batch_count']}",
+                    note=f"{labels_str} - Processing node batch {i + 1} of {node_batch_data['total_batch_count']}",
                     action="SweeperNodeBatch",
-                    regarding={"kind": "Sweeper", "name": f"sweeper-{self.source_node_pool_label}"},
+                    regarding={"kind": "Sweeper", "name": f"sweeper-{labels_str}"},
                 )
 
                 time_it(5)
@@ -143,20 +176,25 @@ class Sweeper:
                 # Will uncordon after timeout, to make nodes avavilble if they aren't removed for some reason
                 if node_batch_data["total_batch_count"] == i + 1:
                     if not self.dry_run and not self.disable_node_removal_wait:
-                        if k8s.check_for_zero_nodes_by_node_pool(self.source_node_pool_label):
-                            logging.info(f"Sweeped - {self.source_node_pool_label} - returned 0 nodes)")
+                        if k8s.check_for_zero_nodes_by_node_pool(
+                            label_selector,
+                            node_limit=self.max_node_limit,
+                            timeout_count=self.zero_nodes_timeout_count,
+                            timeout_seconds=self.zero_nodes_timeout_seconds,
+                        ):
+                            logging.info(f"Sweeped - {labels_str} - returned 0 nodes)")
                             sys.exit()
                         else:
                             logging.info("Node check timeout, uncordoning left over nodes")
                             # UNCORDON NODES JUST INCASE
-                            for node in k8s.get_nodes_by_label(self.source_node_pool_label):
+                            for node in k8s.get_nodes_by_label(label_selector):
                                 k8s.toggle_node_scheduling(node, cordoned=False, dry_run=self.dry_run)
                     else:
                         if self.dry_run:
                             logging.info("DRY-RUN: Skipping scale down check")
                         elif self.disable_node_removal_wait:
                             logging.info("Scale Down Check Disabled")
-                            for node in k8s.get_nodes_by_label(self.source_node_pool_label):
+                            for node in k8s.get_nodes_by_label(label_selector):
                                 k8s.toggle_node_scheduling(node, cordoned=False, dry_run=self.dry_run)
 
                 else:
@@ -170,20 +208,20 @@ class Sweeper:
                     end = time.time()
                     total_time = end - start
                     sweeper_event.create(
-                        note=f"Sweeper has completed on node pool {self.source_node_pool_label}- {total_time}",
+                        note=f"Sweeper has completed on node pool(s) {labels_str}- {total_time}",
                         action="SweeperCompleted",
-                        regarding={"kind": "Sweeper", "name": f"sweeper-{self.source_node_pool_label}"},
+                        regarding={"kind": "Sweeper", "name": f"sweeper-{labels_str}"},
                     )
 
         else:
             sweeper_event.create(
-                note=f"Source pool({self.source_node_pool_label}) returned 0 nodes. Nothing to sweep. Sorry Johnny :-(",
+                note=f"Source pool(s)({labels_str}) returned 0 nodes. Nothing to sweep. Sorry Johnny :-(",
                 action="SweeperCheckCompleted",
-                regarding={"kind": "Sweeper", "name": f"sweeper-{self.source_node_pool_label}"},
+                regarding={"kind": "Sweeper", "name": f"sweeper-{labels_str}"},
             )
 
             logging.info(
-                f"Crane Kick - Source pool({self.source_node_pool_label}) returned 0 nodes. Nothing to sweep. Sorry Johnny :-("
+                f"Crane Kick - Source pool(s)({labels_str}) returned 0 nodes. Nothing to sweep. Sorry Johnny :-("
             )
 
         # Grab Currrent Time After Running the Code

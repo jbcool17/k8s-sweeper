@@ -1,11 +1,11 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends curl git wget jq
 
 # /// TESTING \\\
 ENV KWOK_REPO=kubernetes-sigs/kwok
-ENV KWOK_LATEST_RELEASE=v0.5.1
+ENV KWOK_LATEST_RELEASE=v0.7.0
 ENV KWOK_OS=linux
 # ENV KWOK_ARCH=arm64
 
@@ -17,7 +17,7 @@ RUN wget -O kwok -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LA
     && chmod +x kwok \
     && mv kwok /usr/local/bin/kwok
 
-ENV KUBECTL_VERSION=v1.29.3
+ENV KUBECTL_VERSION=v1.33.5
 RUN curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/${KWOK_OS}/$(dpkg --print-architecture)/kubectl" \
     && chmod +x kubectl \
     && mv kubectl /usr/local/bin/kubectl

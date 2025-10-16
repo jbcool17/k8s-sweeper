@@ -46,14 +46,6 @@ sweeper sweep -s "kubernetes.io/os=linux"
 sweeper sweep --source-node-pool-label cloud.google.com/gke-nodepool=<NODE_POOL>
 ```
 
-## Auto Sweeper(NOT IMPLEMENTED)
-
-- uses specific strategies to process a gke cluster's node pools
-
-```
-sweeper auto-sweep
-```
-
 ## Testing
 
 Using `kind` or `kwok` to simulate kubernetes clusters

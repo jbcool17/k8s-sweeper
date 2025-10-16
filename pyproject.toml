@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sweeper"
-version = "0.1.0"
+version = "1.1.0"
 dynamic = ["dependencies"]
+requires-python = ">=3.10"
 
 [project.scripts]
 sweeper = "sweeper.cli:cli"
