@@ -1,7 +1,5 @@
 # testing sweeper
 
-- KIND: https://kind.sigs.k8s.io/
-- KWOK: https://kwok.sigs.k8s.io/
 
 ## Usage
 

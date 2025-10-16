@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/python
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 RUN apt-get update && \
     apt-get install --yes --no-install-recommends git wget && \

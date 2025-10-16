@@ -12,3 +12,6 @@ docker-build:
 
 docker-test:
 	docker build -t test -f Dockerfile.test . --no-cache && docker run -it --rm test
+
+test-kwok:
+	./test/kwok/kwok-uv.sh
