@@ -47,7 +47,7 @@ pip install .
 
 ## Usage
 
-**note:** make sure target pool does not have the ability to scale up new nodes, *For example in gke*: setting the max nodes it can scale up to `1`, leaving autoscaling on would allow you to naturally downscale
+**note:** You may need to make sure target pool does not have the ability to scale up new nodes, otherwise your at the mercy of what new nodes the cluster-autoscaler will prefer to scale up depending on the scaling profile.
 
 ```
 # Sweep pods off of nodes with following label selector (kubernetes.io/os=linux)
