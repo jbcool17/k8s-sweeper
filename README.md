@@ -18,6 +18,15 @@ A cluster-autoscaler feature is required to allow for proper downscaling while a
 
 ## Setup
 
+[uv](https://github.com/astral-sh/uv)
+
+```
+uv sync
+uv run sweeper
+```
+
+OR
+
 ```bash
 make venv
 
