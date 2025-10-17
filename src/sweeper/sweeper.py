@@ -17,7 +17,7 @@ class Sweeper:
 
     def __init__(
         self,
-        source_node_pool_label: list[str] = ["cloud.google.com/gke-nodepool=default"],
+        source_node_pool_labels: list[str] = ["cloud.google.com/gke-nodepool=default"],
         # How many nodes per batch
         node_batch_size: int = 10,
         # How much time in between node batches
@@ -39,12 +39,14 @@ class Sweeper:
         note: str = "",
         # Max node limit
         max_node_limit: int = None,
-        # Timeout settings for zero node check
-        zero_nodes_timeout_count: int = 10,
-        zero_nodes_timeout_seconds: int = 20,
+        # Timeout settings for nodes timeout check
+        nodes_timeout_count: int = 10,
+        nodes_timeout_seconds: int = 20,
+        # Process the oldest nodes first
+        oldest_first: bool = False,
     ):
         # NODE POOL
-        self.source_node_pool_label = source_node_pool_label
+        self.source_node_pool_labels = source_node_pool_labels
 
         # BATCH SETTINGS
         self.node_batch_size = node_batch_size
@@ -59,8 +61,10 @@ class Sweeper:
         self.processed = processed
         self.note = note
         self.max_node_limit = max_node_limit
-        self.zero_nodes_timeout_count = zero_nodes_timeout_count
-        self.zero_nodes_timeout_seconds = zero_nodes_timeout_seconds
+        self.nodes_timeout_count = nodes_timeout_count
+        self.nodes_timeout_seconds = nodes_timeout_seconds
+
+        self.oldest_first = oldest_first
 
         if self.dry_run:
             self.node_batch_time = DRY_RUN_TIME
@@ -77,7 +81,7 @@ class Sweeper:
         - Wait for nodes to scale down in source pool, uncordon if it times out
         """
 
-        if not self.source_node_pool_label:
+        if not self.source_node_pool_labels:
             logging.error("No source node pool labels provided. Exiting.")
             sys.exit(1)
 
@@ -85,12 +89,12 @@ class Sweeper:
         start = time.time()
 
         # SETUP - Get all nodes that have all source labels
-        label_selector = ",".join(self.source_node_pool_label)
-        source_nodes = k8s.get_nodes_by_label(label_selector)
+        label_selector = ",".join(self.source_node_pool_labels)
+        source_nodes = k8s.get_nodes_by_label(label_selector, oldest_first=self.oldest_first)
         initial_node_count = len(source_nodes)
 
         # Join labels for logging
-        labels_str = ", ".join(self.source_node_pool_label)
+        labels_str = ", ".join(self.source_node_pool_labels)
 
         # Start Logging
         logging.info(f"Source: {labels_str} {initial_node_count}")
@@ -172,15 +176,15 @@ class Sweeper:
 
                 # ------------------------------------------------------------------
                 # NATURAL CLEAN UP, WAITING FOR CLUSTER AUTOSCALER
-                # Will track nodes until they are removed
+                # Will track nodes until they are removed or timeout is met
                 # Will uncordon after timeout, to make nodes avavilble if they aren't removed for some reason
                 if node_batch_data["total_batch_count"] == i + 1:
                     if not self.dry_run and not self.disable_node_removal_wait:
-                        if k8s.check_for_zero_nodes_by_node_pool(
+                        if k8s.nodes_timeout_check(
                             label_selector,
                             node_limit=self.max_node_limit,
-                            timeout_count=self.zero_nodes_timeout_count,
-                            timeout_seconds=self.zero_nodes_timeout_seconds,
+                            timeout_count=self.nodes_timeout_count,
+                            timeout_seconds=self.nodes_timeout_seconds,
                         ):
                             logging.info(f"Sweeped - {labels_str} - returned 0 nodes)")
                             sys.exit()

@@ -25,13 +25,18 @@ def get_nodes():
     return v1.list_node(watch=False).items
 
 
-def get_nodes_by_label(label):
+def get_nodes_by_label(label, oldest_first=False):
     """
     Get a list of node by label
     """
     load_config()
     v1 = client.CoreV1Api()
-    return v1.list_node(watch=False, label_selector=f"{label}").items
+    nodes = v1.list_node(watch=False, label_selector=f"{label}").items
+
+    if oldest_first:
+        nodes.sort(key=lambda node: node.metadata.creation_timestamp)
+
+    return nodes
 
 
 def get_node_by_name(name):
@@ -87,25 +92,25 @@ def check_for_new_nodes_by_node_pool(node_pool_label):
     return False
 
 
-def check_for_zero_nodes_by_node_pool(
-    node_pool_label, timeout_count=10, node_limit=None, timeout_seconds=20
+def nodes_timeout_check(
+    label_selector, timeout_count=10, node_limit=None, timeout_seconds=20
 ) -> bool:
     """
-    Waiting for nodes with a certain label to be removed
+    Waiting for nodes to return 0 or timeout to be met.
     """
     check_count = 0
     # print()
     while check_count < timeout_count:
-        logging.info(f"Checking({check_count + 1}/{timeout_count}) for removed nodes({node_pool_label})...")
-        node_count = len(get_nodes_by_label(node_pool_label))
+        logging.info(f"Checking nodes with label({label_selector}) - ({check_count + 1}/{timeout_count})...")
+        node_count = len(get_nodes_by_label(label_selector))
         if node_limit is not None:
-            logging.info(f"Nodes for Removal: {node_count} (max_node_limit: {node_limit})")
+            logging.info(f"Nodes remaining: {node_count} (max_node_limit: {node_limit})")
         else:
-            logging.info(f"Nodes for Removal: {node_count}")
+            logging.info(f"Nodes remaining: {node_count}")
         check_count += 1
 
         if node_count == 0:
-            logging.info("Zero nodes check complete")
+            logging.info("Zero nodes found.")
             return True
         time_it(timeout_seconds)
 
@@ -204,6 +209,12 @@ def toggle_node_scheduling(node, cordoned=True, dry_run=False) -> None:
         try:
             node_name = node.metadata.name
             node = get_node_by_name(node_name)
+
+            if (node.spec.unschedulable or False) == cordoned:
+                state = "cordoned" if cordoned else "uncordoned"
+                logging.info(f"Node {node_name} is already {state}.")
+                return
+
             node.spec.unschedulable = cordoned
             v1.patch_node(node_name, node)
             action = "cordoned" if cordoned else "uncordoned"

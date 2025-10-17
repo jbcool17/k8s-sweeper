@@ -21,10 +21,10 @@ def cli():
 @cli.command("sweep")
 @click.option(
     "-s",
-    "--source-node-pool-label",
-    "source_node_pool_label",
+    "--source-node-pool-labels",
+    "source_node_pool_labels",
     multiple=True,
-    help="Source node pool label. Can be specified multiple times.",
+    help="Source node pool labels. Can be specified multiple times.",
 )
 @click.option("-nbs", "--node-batch-size", "node_batch_size", default=1, help="(1)Number of nodes in each batch")
 @click.option("-pbs", "--pod-batch-size", "pod_batch_size", default=5, help="(5)Number of pod to evict in a batch")
@@ -41,20 +41,20 @@ def cli():
 )
 @click.option("-mnl", "--max-node-limit", "max_node_limit", default=None, type=int, help="Max node limit to process")
 @click.option(
-    "-zntc",
-    "--zero-nodes-timeout-count",
-    "zero_nodes_timeout_count",
+    "-ntc",
+    "--nodes-timeout-count",
+    "nodes_timeout_count",
     default=10,
     help="(10)Number of times to check for zero nodes",
 )
 @click.option(
-    "-znts",
-    "--zero-nodes-timeout-seconds",
-    "zero_nodes_timeout_seconds",
+    "-nts",
+    "--nodes-timeout-seconds",
+    "nodes_timeout_seconds",
     default=20,
     help="(20)Seconds between each zero nodes check",
 )
-
+@click.option("-of", "--oldest-first", "oldest_first", is_flag=True, help="Process the oldest nodes first")
 def sweep(**kwargs: any) -> None:
     """
     Cordon and drain nodes with a specific label
