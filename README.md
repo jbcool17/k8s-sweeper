@@ -28,16 +28,6 @@ uv run sweeper
 OR
 
 ```bash
-make venv
-
-make activate
-
-make install
-```
-
-OR
-
-```bash
 python -m venv .env
 
 source .env/bin/activate
