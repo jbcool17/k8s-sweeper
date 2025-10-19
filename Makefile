@@ -10,8 +10,11 @@ install:
 docker-build:
 	docker build -t test .
 
-docker-test:
-	docker build -t test -f Dockerfile.test . && docker run -it --rm test
+docker-test-build:
+	docker build -t test -f Dockerfile.test .
 
-test-kwok:
-	./test/kwok/kwok-uv.sh
+docker-test-run: docker-test-build
+	docker run -it --rm test
+
+docker-test-env: docker-test-build
+	docker run -it --rm --entrypoint=bash test 

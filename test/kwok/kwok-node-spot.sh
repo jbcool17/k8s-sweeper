@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# SPOT
-CPU_COUNT=32
-POD_COUNT=32
-MACHINE_FAMILY="n2d"
-INSTANCE_TYPE="${MACHINE_FAMILY}-standard-${CPU_COUNT}"
-NODE_POOL="spot-${MACHINE_FAMILY}-12345"
-PROVISIONING="spot"
-JBCOOL_TYPE="spot"
+set -e # Exit immediately if a command exits with a non-zero status.
+
+source $PWD/test/kwok/config.sh
+
+NODE_COUNT=6
 
 for i in `seq 0 5`; do
   kubectl apply -f - <<EOF
@@ -32,7 +29,7 @@ metadata:
     jbcool.io/type: ${JBCOOL_TYPE}
   name: kwok-node-spot-${MACHINE_FAMILY}-${i}
 spec:
-  taints: # Avoid scheduling actual running pods to fake Node
+  taints:
   - effect: NoSchedule
     key: jbcool.io/type
     value: spot
@@ -61,12 +58,14 @@ EOF
 
 done
 
+
+MACHINE_FAMILY="${MACHINE_FAMILY_N2D}"
 # SPOT BACKUP
-INSTANCE_TYPE="${MACHINE_FAMILY}-standard-${CPU_COUNT}"
 NODE_POOL="spot-${MACHINE_FAMILY}-backup-12345"
 PROVISIONING="standard"
+JBCOOL_TYPE="spot"
 
-for i in `seq 0 5`; do
+for i in `seq 0 ${NODE_COUNT}`; do
   kubectl apply -f - <<EOF
 apiVersion: v1
 kind: Node
@@ -89,7 +88,7 @@ metadata:
     jbcool.io/type: ${JBCOOL_TYPE}
   name: kwok-node-spot-${MACHINE_FAMILY}-backup-${i}
 spec:
-  taints: # Avoid scheduling actual running pods to fake Node
+  taints:
   - effect: NoSchedule
     key: jbcool.io/type
     value: spot
@@ -118,10 +117,10 @@ EOF
 
 done
 
-#  NON N2D
 MACHINE_FAMILY="n2"
-INSTANCE_TYPE="${MACHINE_FAMILY}-standard-${CPU_COUNT}"
+#  NON N2D
 NODE_POOL="spot-${MACHINE_FAMILY}-12345"
+JBCOOL_TYPE="spot"
 PROVISIONING="spot"
 
 for i in `seq 0 5`; do

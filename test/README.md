@@ -1,8 +1,11 @@
-# testing sweeper
+# Testing Sweeper
 
+This project uses `kwok` to simulate a Kubernetes cluster for testing purposes. The test environment is managed via Docker.
 
-## Usage
+## Running Tests
 
-- spin up cluster with kwok (https://kwok.sigs.k8s.io/docs/user/installation/)
+The following command will build the test Docker image, start a `kwok` cluster inside it, and run the test script.
 
-RUN: `make docker-test`
+```bash
+make docker-test-run
+```

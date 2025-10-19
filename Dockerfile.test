@@ -1,13 +1,12 @@
 FROM python:3.10-slim
 
 RUN apt-get update && \
-    apt-get install --yes --no-install-recommends curl git wget jq
+    apt-get install --yes --no-install-recommends wget
 
 # /// TESTING \\\
 ENV KWOK_REPO=kubernetes-sigs/kwok
 ENV KWOK_LATEST_RELEASE=v0.7.0
 ENV KWOK_OS=linux
-# ENV KWOK_ARCH=arm64
 
 RUN wget -O kwokctl -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LATEST_RELEASE}/kwokctl-${KWOK_OS}-$(dpkg --print-architecture)" \
     && chmod +x kwokctl \
@@ -18,25 +17,31 @@ RUN wget -O kwok -c "https://github.com/${KWOK_REPO}/releases/download/${KWOK_LA
     && mv kwok /usr/local/bin/kwok
 
 ENV KUBECTL_VERSION=v1.33.5
-RUN curl -LO "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/${KWOK_OS}/$(dpkg --print-architecture)/kubectl" \
+RUN wget -O kubectl -c "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/${KWOK_OS}/$(dpkg --print-architecture)/kubectl" \
     && chmod +x kubectl \
     && mv kubectl /usr/local/bin/kubectl
 
 # /// SWEEPER \\\
-WORKDIR /app
-COPY requirements.txt .
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-RUN pip install --upgrade pip wheel setuptools && \
-    pip install --no-cache-dir -r requirements.txt
+WORKDIR /opt/app
+COPY pyproject.toml ./
+COPY . /opt/app/
 
-COPY . /app/
+RUN pip install --no-cache-dir .
 
-RUN pip install --no-cache-dir . && sweeper --version
-
+# Permissions and user setup
 ENV HOME="/home/sweeper"
 RUN groupadd -r -g 3001 sweeper && useradd -r -d $HOME -u 3001 -g sweeper sweeper
 RUN mkdir -p $HOME
 RUN chown sweeper $HOME
+RUN chown -R sweeper:sweeper /opt/app /usr/local/bin
 USER sweeper
 
-ENTRYPOINT [ "sh", "/app/test/kwok/kwok.sh" ]
+# Prepare KWOK cluster
+RUN kwokctl create cluster
+
+ENTRYPOINT [ "bash" ]
+CMD [ "/opt/app/test/kwok/kwok.sh" ]

@@ -1,25 +1,23 @@
 # https://hub.docker.com/_/python
 FROM python:3.10-slim
 
-RUN apt-get update && \
-    apt-get install --yes --no-install-recommends git wget && \
-    git --version
+# Use a virtual environment to not pollute the global python environment
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-WORKDIR /app
-COPY requirements.txt .
+WORKDIR /opt/app
+COPY pyproject.toml .
 
-RUN pip install --upgrade pip wheel setuptools && \
-    pip install --no-cache-dir -r requirements.txt
-
-COPY . /app/
-
+# Install dependencies first to leverage Docker layer caching
+RUN pip install --no-cache-dir .
+COPY . /opt/app/
+# Install the application itself
 RUN pip install --no-cache-dir .
 
 ENV HOME="/home/sweeper"
 RUN groupadd -r -g 3001 sweeper && useradd -r -d $HOME -u 3001 -g sweeper sweeper
-RUN mkdir -p $HOME
-RUN chown sweeper $HOME
+RUN mkdir -p $HOME && chown -R sweeper:sweeper $HOME /opt/app
 USER sweeper
 
-# https://stackoverflow.com/questions/54597500/printing-not-being-logged-by-kubernetes
 ENTRYPOINT [ "sweeper" ]

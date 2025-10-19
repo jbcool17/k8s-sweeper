@@ -1,13 +1,9 @@
 #!/bin/bash
 
-# Variables
-CPU_COUNT=32
-POD_COUNT=32
-MACHINE_FAMILY="n2d"
-INSTANCE_TYPE="${MACHINE_FAMILY}-standard-${CPU_COUNT}"
-NODE_POOL="default-${MACHINE_FAMILY}-12345"
-PROVISIONING="standard"
-JBCOOL_TYPE="default"
+set -e
+source $PWD/test/kwok/config.sh
+
+MACHINE_FAMILY="${MACHINE_FAMILY_N2D}"
 
 for i in `seq 0 5`; do
   kubectl apply -f - <<EOF
@@ -33,10 +29,6 @@ metadata:
     jbcool.io/type: ${JBCOOL_TYPE}
   name: kwok-node-default-${MACHINE_FAMILY}-${i}
 spec:
-#   taints: # Avoid scheduling actual running pods to fake Node
-#   - effect: NoSchedule
-#     key: kwok.x-k8s.io/node
-#     value: fake
 status:
   allocatable:
     cpu: ${CPU_COUNT}
